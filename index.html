@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Connect | Share Instantly</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        :root {
+            --primary: #4e54c8;
+            --primary-light: #8f94fb;
+            --white: #ffffff;
+            --dark: #2c3e50;
+            --gray: #ecf0f1;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(78, 84, 200, 0.8), rgba(143, 148, 251, 0.8)), 
+                        url('https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            color: var(--white);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .app-section {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .screen h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .qr-container {
+            background: var(--gray);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+        }
+
+        #qr-canvas {
+            max-width: 100%;
+        }
+
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #scanner-video {
+            width: 100%;
+            border-radius: 10px;
+            background: var(--dark);
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scanner-frame {
+            width: 70%;
+            height: 70%;
+            border: 4px solid var(--primary);
+            border-radius: 5px;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        button:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(78, 84, 200, 0.1);
+        }
+
+        .result-container {
+            padding: 15px;
+            background: var(--gray);
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-section {
+                padding: 30px 20px;
+                min-height: 300px;
+            }
+            
+            .app-section {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="hero-section">
+            <h1>QR Connect</h1>
+            <p>Share information instantly between devices with secure QR codes</p>
+        </div>
+        
+        <div class="app-section">
+            <div class="logo">QRConnect</div>
+            
+            <!-- Home Screen -->
+            <div id="home-screen" class="screen active">
+                <h2>What would you like to do?</h2>
+                <div class="button-group">
+                    <button onclick="showGenerateScreen()">Generate QR</button>
+                    <button class="secondary" onclick="showScanScreen()">Scan QR</button>
+                </div>
+            </div>
+            
+            <!-- Generate QR Screen -->
+            <div id="generate-screen" class="screen">
+                <h2>Generate QR Code</h2>
+                <div class="qr-container">
+                    <canvas id="qr-canvas"></canvas>
+                </div>
+                <div class="button-group">
+                    <button onclick="generateQR()">Generate New</button>
+                    <button class="secondary" onclick="showHomeScreen()">Back</button>
+                </div>
+            </div>
+            
+            <!-- Scan QR Screen -->
+            <div id="scan-screen" class="screen">
+                <h2>Scan QR Code</h2>
+                <div class="scanner-container">
+                    <video id="scanner-video" playsinline></video>
+                    <div class="scanner-overlay">
+                        <div class="scanner-frame"></div>
+                    </div>
+                </div>
+                <div class="result-container" id="scan-result">
+                    Point your camera at a QR code
+                </div>
+                <div class="button-group">
+                    <button class="secondary" onclick="showHomeScreen()">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const screens = {
+            home: document.getElementById('home-screen'),
+            generate: document.getElementById('generate-screen'),
+            scan: document.getElementById('scan-screen')
+        };
+        
+        const qrCanvas = document.getElementById('qr-canvas');
+        const scanResult = document.getElementById('scan-result');
+        const videoElement = document.getElementById('scanner-video');
+        
+        // Video stream tracker
+        let videoStream = null;
+        let scanningActive = false;
+
+        // Screen navigation
+        function showHomeScreen() {
+            stopScanning();
+            setActiveScreen('home');
+        }
+
+        function showGenerateScreen() {
+            setActiveScreen('generate');
+            generateQR();
+        }
+
+        function showScanScreen() {
+            setActiveScreen('scan');
+            startScanning();
+        }
+
+        function setActiveScreen(screenName) {
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('active');
+            });
+            screens[screenName].classList.add('active');
+        }
+
+        // QR Generation
+        function generateQR() {
+            const randomData = "CONNECT-" + Math.random().toString(36).substr(2, 9);
+            
+            QRCode.toCanvas(qrCanvas, randomData, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#2c3e50',
+                    light: '#ecf0f1'
+                }
+            }, (error) => {
+                if (error) console.error(error);
+            });
+        }
+
+        // QR Scanning
+        function startScanning() {
+            scanResult.textContent = 'Point your camera at a QR code';
+            
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            }).then(stream => {
+                videoStream = stream;
+                videoElement.srcObject = stream;
+                videoElement.play();
+                scanningActive = true;
+                scanFrame();
+            }).catch(err => {
+                scanResult.textContent = "Camera error: " + err.message;
+            });
+        }
+
+        function stopScanning() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            scanningActive = false;
+        }
+
+        function scanFrame() {
+            if (!scanningActive) return;
+            
+            try {
+                const canvasElement = document.createElement('canvas');
+                const canvas = canvasElement.getContext('2d');
+                
+                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                    canvasElement.height = videoElement.videoHeight;
+                    canvasElement.width = videoElement.videoWidth;
+                    canvas.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                    
+                    const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        scanResult.innerHTML = `<strong>Connected:</strong> ${code.data}`;
+                        stopScanning();
+                    } else {
+                        requestAnimationFrame(scanFrame);
+                    }
+                } else {
+                    requestAnimationFrame(scanFrame);
+                }
+            } catch (err) {
+                scanResult.textContent = "Scanning error: " + err.message;
+                stopScanning();
+            }
+        }
+
+        // Clean up when leaving page
+        window.addEventListener('beforeunload', () => {
+            stopScanning();
+        });
+    </script>
+</body>
+</html>
